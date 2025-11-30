@@ -1,0 +1,72 @@
+Job Title: Backend Engineer – Node.js / RAG / LLM
+
+Location: Remote / Bangalore / Mumbai
+
+About the Role
+We are looking for a Backend Engineer with strong Node.js experience to build and scale our AI-powered recruiting platform. You’ll design REST APIs, integrate with LLM providers, and implement RAG-based features using vector databases.
+
+Responsibilities
+
+Design, build, and maintain backend services using Node.js (v18+) and Express.js
+
+Implement resume and job description ingestion pipelines (PDF/TXT → text)
+
+Build and optimize RAG flows: chunking, embeddings, vector search, and context assembly
+
+Integrate with OpenAI (or equivalent) LLM APIs for scoring and Q&A
+
+Design and manage PostgreSQL schemas for storing users, resumes, and job descriptions
+
+Implement pgvector (or other vector DB) for storing and querying embeddings
+
+Develop secure, well-documented REST APIs for the React frontend (file upload, scoring, chat)
+
+Write unit/integration tests and participate in code reviews
+
+Collaborate with frontend engineers and product to refine requirements
+
+Must-Have Requirements
+
+3–6 years of experience as a Backend Engineer
+
+Strong proficiency in Node.js, Express.js, and TypeScript
+
+Hands-on experience building RESTful APIs
+
+Experience with PostgreSQL (or similar relational DB) including schema design and indexing
+
+Practical experience with LLM APIs (OpenAI/Anthropic/etc.)
+
+Experience implementing RAG:
+
+Text chunking & preprocessing
+
+Generating embeddings
+
+Vector similarity search (pgvector / Pinecone / Qdrant / Chroma)
+
+Solid understanding of API authentication, error handling, and logging
+
+Experience with Git and CI basics (GitHub Actions / similar)
+
+Nice to Have
+
+Experience with React or understanding of frontend-backend integration
+
+Familiarity with Docker and basic cloud deployments (AWS/GCP/Azure)
+
+Exposure to Redis or other caching technologies
+
+Basic understanding of resume parsing / information extraction techniques
+
+Education
+
+Bachelor’s degree in Computer Science, Engineering, or a related field (or equivalent experience)
+
+Example Responsibilities in this Role
+
+Build an endpoint to upload a resume + JD, trigger parsing, embedding generation, and scoring
+
+Expose a chat endpoint that uses RAG over resume text to answer recruiter questions
+
+Return match score, strengths, gaps, and key insights as part of the analysis response

@@ -1,0 +1,147 @@
+Name: Arjun Mehta
+Location: Bangalore, India
+Email: arjun.mehta@example.com
+
+Phone: +91-98765-12345
+LinkedIn: linkedin.com/in/arjun-mehta-backend
+GitHub: github.com/arjun-mehta-dev
+
+Professional Summary
+
+Backend Engineer with 5+ years of experience building Node.js and TypeScript services, primarily in SaaS and data platforms. Recently focused on integrating LLM-based features and implementing RAG workflows using pgvector and OpenAI. Strong in designing REST APIs, working with PostgreSQL, and delivering production-grade features in agile teams.
+
+Key Skills
+
+Languages: JavaScript, TypeScript
+
+Backend: Node.js, Express.js, NestJS (basic)
+
+Databases: PostgreSQL, MongoDB
+
+Vector / Search: pgvector, basic Elasticsearch
+
+AI / LLMs: OpenAI API (chat/completions, embeddings), prompt design, RAG patterns
+
+Dev Tools: Git, GitHub, Postman, Jest
+
+Other: Redis (caching), Docker (basic), REST API design, logging & error handling
+
+Note: No hands-on Kubernetes experience yet; limited exposure to cloud infrastructure (mostly worked with DevOps teams for deployments).
+
+Professional Experience
+Backend Engineer – AI Features
+
+TalentFlow Technologies Pvt. Ltd. – Bangalore, India
+April 2022 – Present
+
+Designed and implemented backend services in Node.js (v18+) + Express.js for an AI-powered candidate screening platform.
+
+Built an ingestion pipeline to parse resumes and job descriptions (PDF/TXT → plain text) using pdf-parse and custom text cleaners.
+
+Implemented a RAG pipeline:
+
+Chunked resume content by sections (summary, experience, skills, education).
+
+Generated OpenAI text-embedding-3-small embeddings.
+
+Stored embeddings in PostgreSQL with pgvector for similarity search.
+
+Created APIs to compute a match score between resume and job description based on:
+
+Overlap of key skills
+
+Mandatory requirements
+
+Years of relevant experience
+
+Developed a chat endpoint that:
+
+Converts recruiter questions to embeddings
+
+Retrieves top-k relevant resume chunks via pgvector similarity search
+
+Sends retrieved context + question to OpenAI to generate answers
+
+Implemented endpoints to list previous analyses per recruiter and per job ID, including match scores and timestamps.
+
+Added structured logging and centralized error handling middleware to simplify debugging.
+
+Wrote unit tests with Jest for core services (parsing, scoring, RAG retrieval).
+
+Tech stack: Node.js, Express.js, TypeScript, PostgreSQL, pgvector, OpenAI API, Redis, Docker (for local dev).
+
+Software Engineer – Backend
+
+DataBridge Analytics – Mumbai, India
+July 2019 – March 2022
+
+Developed REST APIs in Node.js + Express.js for a B2B analytics dashboard.
+
+Designed and optimized PostgreSQL schemas for customer data, reports, and access control.
+
+Implemented background jobs for scheduled report generation and email notifications.
+
+Integrated Redis for caching frequently accessed analytics results and configuration data.
+
+Worked closely with frontend team (React) to design API contracts and improve page load performance.
+
+Implemented input validation, role-based access checks, and error-handling middleware.
+
+Tech stack: Node.js, Express.js, PostgreSQL, Redis, React (integration only), Git, Jest.
+
+Projects
+
+1. Resume Screening RAG Prototype (Personal Project)
+Jan 2024 – Ongoing
+
+Built a small prototype that takes a single resume and JD, parses them, and returns:
+
+Match percentage
+
+Matched skills
+
+Missing skills
+
+Short summary of fit
+
+Implemented RAG-based Q&A over resume content:
+
+Chunked resume into sections (summary, skills, each job experience).
+
+Used OpenAI embeddings + pgvector to store and search chunks.
+
+Built a /chat API that answers questions like:
+
+“Does the candidate know React?”
+
+“How many years of Node.js experience does this candidate have?”
+
+Exposed all functionality via simple REST APIs and tested via Postman and a basic HTML/JS client.
+
+Tech: Node.js, Express.js, TypeScript, OpenAI API, PostgreSQL, pgvector, pdf-parse.
+
+Education
+
+B.Tech in Computer Science and Engineering
+Visvesvaraya Technological University, Karnataka, India
+2015 – 2019
+
+Coursework: Data Structures & Algorithms, Databases, Operating Systems, Distributed Systems
+
+Final Year Project: “Real-time Data Pipeline for E-commerce Analytics” using Node.js and PostgreSQL
+
+Additional Information
+
+Comfortable working in agile teams, doing code reviews and writing technical documentation.
+
+Prefer backend-heavy roles; familiar with React at a basic level but not a dedicated frontend engineer.
+
+Open to learning more about cloud infrastructure (AWS/GCP) and Kubernetes as needed.
+
+You can now:
+
+Save the JD block as sample_job_description_backend_llm.txt (or PDF).
+
+Save the resume block as sample_resume_backend_engineer_llm_rag.txt (or PDF).
+
+These should be very close to the assessment spec (Node.js + RAG + LLM + pgvector) so your backend’s parser, matcher, and RAG Q&A will have plenty of realistic signals to work with.
