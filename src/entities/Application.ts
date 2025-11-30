@@ -24,8 +24,14 @@ export class Application {
   @Column({ type: 'jsonb', nullable: true })
   gaps: string[] | null;
 
+  @Column({ name: 'extra_skills', type: 'jsonb', nullable: true })
+  extraSkills: string[] | null;
+
   @Column({ type: 'jsonb', nullable: true })
   insights: string[] | null;
+
+  @Column({ name: 'experience_highlight', type: 'text', nullable: true })
+  experienceHighlight: string | null;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

@@ -16,9 +16,10 @@ Backend service for resume vs. job-description matching, RAG-powered chat, and r
 ### High-Level Components
 - **Clients**: Web UI or API consumers sending uploads and chat requests.
 - **Express/TypeScript API**: Routes + controllers for recruiters and candidates.
-- **Services**: `ApplicationService` handles parsing, chunking, embeddings, persistence; `ChatService` performs RAG chat.
-- **Database**: PostgreSQL + pgvector store users, jobs, applications, and embeddings.
-- **OpenAI**: Provides embeddings and chat completions.
+- **Services**: `ApplicationService` handles parsing, chunking, embeddings, ATS skill extraction, and persistence; `ChatService` performs RAG chat.
+- **LLM Skill Extractor**: `src/utils/skillExtractor.ts` wraps OpenAI with ATS-style prompts to build structured skills + match scoring.
+- **Database**: PostgreSQL + pgvector store users, jobs, applications, match summaries, and embeddings.
+- **OpenAI**: Provides embeddings plus chat/skill extraction completions.
 
 ```mermaid
 flowchart LR
@@ -26,8 +27,11 @@ flowchart LR
   Client -->|HTTP + Auth Headers| API[Express Router]
   API --> Controllers
   Controllers --> Services
+  Services -->|ATS Skills & Matching| SkillExtractor[(LLM Skill Extractor)]
   Services -->|SQL/Vector Ops| DB[(PostgreSQL + pgvector)]
   Services -->|Embeddings & Chat| OpenAI[(OpenAI APIs)]
+  SkillExtractor -->|Structured prompts| OpenAI
+  SkillExtractor -->|Match score + insights| Services
 ```
 
 ### Request Lifecycle (Example: Create Application)
@@ -41,10 +45,19 @@ sequenceDiagram
   UI->>API: POST /api/applications (files + form-data)
   API->>Service: createApplication(dto, user)
   Service->>OpenAI: embedMany(jd/resume chunks)
+  Service->>SkillExtractor: analyzeSkillsMatch(jd, resume)
+  SkillExtractor->>OpenAI: ATS JSON extraction prompts
+  SkillExtractor-->>Service: match score + strengths/gaps/extra skills + experience highlight
   Service->>DB: save job/resume chunks + application
   Service-->>API: application summary + match details
   API-->>UI: 201 Created JSON response
 ```
+
+### ATS Skill Matching Flow
+1. **Parse text**: resumes/JDs become plain text via `textParser`.
+2. **LLM extraction**: `skillExtractor.ts` prompts OpenAI to output JSON with skills, categories, importance, and evidence.
+3. **Match & score**: normalized skills are compared, weighted (must-have vs. nice-to-have), and produce strengths, gaps, extra skills, and a 0–100 score.
+4. **Experience highlight**: regex finds "N years" in the resume and combines it with the top matched skills to create a short summary stored with the application.
 
 ## Tech Stack
 - **Runtime**: Node.js 18+, TypeScript.
@@ -121,17 +134,15 @@ Create an application by uploading resume & JD.
     "applicationId": "uuid",
     "jobId": "uuid",
     "match": {
-      "score": 82.5,
-      "strengths": [
-        "5y React",
-        "BS Computer Science"
-      ],
-      "gaps": [
-        "No Kubernetes"
-      ],
+      "score": 82,
+      "strengths": ["Node.js", "PostgreSQL"],
+      "gaps": ["Kubernetes"],
+      "extraSkills": ["Redis", "Jest"],
       "insights": [
-        "Strong backend architecture focus"
-      ]
+        "Matched 2/5 JD skills (40%)",
+        "Gaps: Kubernetes"
+      ],
+      "experienceHighlight": "5+ years of experience across Node.js, PostgreSQL."
     }
   }
   ```
@@ -152,9 +163,11 @@ Fetch application + match summary.
     "jobTitle": "Backend Engineer",
     "match": {
       "score": 78,
-      "strengths": [],
-      "gaps": [],
-      "insights": []
+      "strengths": ["Node.js"],
+      "gaps": ["Kubernetes"],
+      "extraSkills": ["Redis"],
+      "insights": [],
+      "experienceHighlight": "5 years of experience across Node.js."
     },
     "createdAt": "2025-11-30T12:15:00.000Z"
   }
@@ -211,9 +224,9 @@ Candidates reuse recruiter endpoints but only for their own applications:
 - Authentication middleware auto-creates users when headers are omitted; override with explicit IDs/roles.
 
 ## Development Notes
-- **Migrations**: `src/config/data-source.ts` selects migration glob based on `NODE_ENV`. Development uses TypeScript files (`migrations/*.ts`); production uses compiled files under `dist/migrations`.
+- **Migrations**: `src/config/data-source.ts` selects migration glob based on `NODE_ENV`. Development uses TypeScript files (`migrations/*.ts`); production uses compiled files under `dist/migrations`. Run `npm run migration:run` when new match/experience columns are added (e.g., `1700000000001`, `1700000000002`).
 - **Type Safety**: `npm run typecheck` before commits.
-- **OpenAI Usage**: `ChatService` embeds queries/context using `OPENAI_EMBEDDING_MODEL` and `OPENAI_API_KEY`.
+- **OpenAI Usage**: `ChatService` embeds queries/context using `OPENAI_EMBEDDING_MODEL` and `OPENAI_API_KEY`. `skillExtractor.ts` uses the same API key for ATS JSON extraction.
 - **Logging**: JSON structured logs via `utils/logger`. Search logs for timestamps/request IDs when debugging.
 
 For frontend integration, ensure all API calls include the headers and handle upload + chat workflows detailed above.

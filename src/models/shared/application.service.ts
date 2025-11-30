@@ -10,7 +10,7 @@ import { MatchResult } from '../../interfaces/domain/MatchResult';
 import { AuthUser } from '../../middleware/authContext.middleware';
 import { parseFile } from '../../utils/textParser';
 import { chunkText } from '../../utils/chunker';
-import { extractSkillsFromText } from '../../utils/skillExtractor';
+import { analyzeSkillsMatch, SkillMatchSummary } from '../../utils/skillExtractor';
 import { embedMany } from '../../utils/embedding';
 import { AppError } from '../../utils/errorHandler';
 import { logger } from '../../utils/logger';
@@ -129,7 +129,7 @@ export class ApplicationService {
       await queryRunner.manager.save(resumeChunkEntities);
 
       // Compute match score
-      const matchResult = this.computeMatchScore(jdText, resumeText);
+      const matchResult = await this.computeMatchScore(jdText, resumeText);
 
       // Create Application
       const application = this.applicationRepository.create({
@@ -138,7 +138,9 @@ export class ApplicationService {
         matchScore: matchResult.score,
         strengths: matchResult.strengths,
         gaps: matchResult.gaps,
-        insights: matchResult.insights
+        extraSkills: matchResult.extraSkills,
+        insights: matchResult.insights,
+        experienceHighlight: matchResult.experienceHighlight
       });
       await queryRunner.manager.save(application);
 
@@ -201,7 +203,9 @@ export class ApplicationService {
         score: application.matchScore || 0,
         strengths: application.strengths || [],
         gaps: application.gaps || [],
-        insights: application.insights || []
+        extraSkills: application.extraSkills || [],
+        insights: application.insights || [],
+        experienceHighlight: application.experienceHighlight || null
       },
       createdAt: application.createdAt
     };
@@ -253,47 +257,60 @@ export class ApplicationService {
     };
   }
 
-  private computeMatchScore(jdText: string, resumeText: string): MatchResult {
-    const jdSkills = extractSkillsFromText(jdText);
-    const resumeSkills = extractSkillsFromText(resumeText);
+  private async computeMatchScore(jdText: string, resumeText: string): Promise<MatchResult> {
+    const summary = await analyzeSkillsMatch(jdText, resumeText);
+    const insights = this.buildInsights(summary);
+    const experienceHighlight = this.buildExperienceHighlight(summary, resumeText);
 
-    if (jdSkills.length === 0) {
-      return {
-        score: 0,
-        strengths: [],
-        gaps: [],
-        insights: ['No skills detected in job description']
-      };
+    return {
+      score: summary.matchScore,
+      strengths: summary.strengths,
+      gaps: summary.gaps,
+      extraSkills: summary.extraSkills,
+      insights,
+      experienceHighlight
+    };
+  }
+
+  private buildInsights(summary: SkillMatchSummary): string[] {
+    if (summary.jdSkills.length === 0) {
+      return ['No skills detected in job description'];
     }
 
-    const matchedSkills = jdSkills.filter(skill => resumeSkills.includes(skill));
-    const gapSkills = jdSkills.filter(skill => !resumeSkills.includes(skill));
-    
-    const score = Math.round((matchedSkills.length / jdSkills.length) * 100);
-    
-    const strengths = matchedSkills.length > 0 
-      ? [`Has ${matchedSkills.length} matching skills: ${matchedSkills.join(', ')}`]
-      : [];
-    
-    const gaps = gapSkills.length > 0 
-      ? [`Missing skills: ${gapSkills.join(', ')}`]
-      : [];
-
-    const insights = [
-      `Matches ${matchedSkills.length}/${jdSkills.length} key skills`
+    const insights: string[] = [
+      `Matched ${summary.strengths.length}/${summary.jdSkills.length} JD skills (${summary.matchScore}%)`
     ];
 
-    // Add experience level insights
-    const experienceLevels = resumeSkills.filter(skill => skill.includes('level'));
-    if (experienceLevels.length > 0) {
-      insights.push(`Experience level: ${experienceLevels[0]}`);
+    if (summary.gaps.length > 0) {
+      insights.push(`Gaps: ${summary.gaps.join(', ')}`);
     }
 
-    // Add truncation warning if applicable
-    if (jdText.length >= 50000 || resumeText.length >= 50000) {
-      insights.push('Document truncated for analysis');
+    if (summary.extraSkills.length > 0) {
+      const preview = summary.extraSkills.slice(0, 8).join(', ');
+      insights.push(`Extra resume skills: ${preview}`);
     }
 
-    return { score, strengths, gaps, insights };
+    return insights;
+  }
+
+  private buildExperienceHighlight(summary: SkillMatchSummary, resumeText: string): string | null {
+    const normalizedResume = resumeText || '';
+    const yearsMatch = normalizedResume.match(/(\d+\+?)(?=\s*(?:years?|yrs))/i);
+    const yearsValue = yearsMatch ? yearsMatch[1] : null;
+    const strengthsPreview = summary.strengths.slice(0, 3).join(', ');
+
+    if (!yearsValue && !strengthsPreview) {
+      return null;
+    }
+
+    if (yearsValue && strengthsPreview) {
+      return `${yearsValue} years of experience across ${strengthsPreview}.`;
+    }
+
+    if (yearsValue) {
+      return `${yearsValue} years of relevant experience.`;
+    }
+
+    return `Experience with ${strengthsPreview}.`;
   }
 }
